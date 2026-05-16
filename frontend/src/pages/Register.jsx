@@ -16,7 +16,31 @@ const Register = () => {
   const { register, oauthLogin, user } = useContext(AuthContext);
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
+  const [suggestedPassword, setSuggestedPassword] = useState('');
   const passwordScore = useMemo(() => rules.filter(([, test]) => test(form.password)).length, [form.password]);
+
+  const generatePassword = (length = 14) => {
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*()-_=+[]{}|;:,.<>?';
+    const all = upper + lower + numbers + symbols;
+    let password = '';
+
+    password += upper[Math.floor(Math.random() * upper.length)];
+    password += lower[Math.floor(Math.random() * lower.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+
+    for (let i = password.length; i < length; i += 1) {
+      password += all[Math.floor(Math.random() * all.length)];
+    }
+
+    return password
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
+  };
 
   if (user) return <Navigate to="/home" replace />;
 
@@ -60,7 +84,28 @@ const Register = () => {
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className="label">Password</label>
-              <input className="input-field" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
+              <input className="input-field" type="password" value={form.password} onChange={(event) => {
+                setForm({ ...form, password: event.target.value });
+                setSuggestedPassword('');
+              }} />
+              <button
+                className="btn-secondary mt-3 w-full text-sm"
+                type="button"
+                onClick={() => {
+                  const strongPassword = generatePassword();
+                  setForm({ ...form, password: strongPassword, confirmPassword: strongPassword });
+                  setSuggestedPassword(strongPassword);
+                  toast.success('Strong password suggested');
+                }}
+              >
+                Suggest a strong password
+              </button>
+              {suggestedPassword && (
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                  <div className="font-semibold">Suggested password</div>
+                  <div className="mt-2 break-all select-all">{suggestedPassword}</div>
+                </div>
+              )}
             </div>
             <div>
               <label className="label">Confirm password</label>
