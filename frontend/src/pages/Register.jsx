@@ -48,13 +48,16 @@ const Register = () => {
     event.preventDefault();
     if (!form.name.trim()) return toast.error('Full name is required');
     if (!form.email.includes('@')) return toast.error('Enter a valid email');
+    if (!form.password) return toast.error('Password is required');
+    if (!form.confirmPassword) return toast.error('Confirm your password');
     if (passwordScore < rules.length) return toast.error('Password is not strong enough');
     if (form.password !== form.confirmPassword) return toast.error('Passwords do not match');
     setLoading(true);
     try {
-      await register({ name: form.name, email: form.email, password: form.password });
+      await register({ name: form.name.trim(), email: form.email.trim(), password: form.password });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      console.error('Register error:', err);
+      toast.error(err.response?.data?.message || err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
